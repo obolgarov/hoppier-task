@@ -18,6 +18,8 @@ const https = require('https');
  * - Not sure if the leftover balance is the total balance of all of the participants, or
  *   the balance of each participant that made a purchase for a product found in desknibbles.
  *   Will provide both.
+ * 
+ * - Music listened to while writing: Ralph Vaughan Williams, Concerto Grosso: https://www.youtube.com/watch?v=AqZMd9Wv20s
  */
 
 
@@ -34,7 +36,7 @@ const getProductData = new Promise((resolve, reject) => {
   // exists, get data from file instead.
   const productFilename = "PRODUCT_DATA.json";
   
-  fs.readFile(productFilename, (err, result) => {
+  fs.readFile(productFilename, (err, fileResult) => {
     if (err) {
       // assume the error is because the file doesn't exist. Load data from url.
       
@@ -45,13 +47,13 @@ const getProductData = new Promise((resolve, reject) => {
           'user-agent': 'node-user-agent'
         }
       }, (response) => {
-        let result = '';
+        let httpResult = '';
         response.on('data', (data) => {
-          result += data;
+          httpResult += data;
         });
         response.on('end', () => {
           // save data to file
-          fs.writeFile(productFilename, result, (err) => {
+          fs.writeFile(productFilename, httpResult, (err) => {
             if (err) {
               console.log(`ERROR WRITING FILE: ${productFilename}`);
               console.log(err);
@@ -59,14 +61,14 @@ const getProductData = new Promise((resolve, reject) => {
           });
           
           // resolving data doesn't need to wait for file to be saved asynchronously
-          resolve(result);
+          resolve(httpResult);
         })
       }).on('error', reject);
 
     } else {
       // file exists, return that data
-      console.log('returning cached PRODUCT_DATA.json');
-      resolve(result);
+      console.log(`returning cached ${productFilename}`);
+      resolve(fileResult);
     }
   })
 })
@@ -78,9 +80,15 @@ Promise.all([
 
   // convert whatever string data to objects
   const participantData = JSON.parse(participantDataResult);
-  const productData = JSON.parse(productDataResult);
-  
-  // console.log(productData);
+  const productData = JSON.parse(productDataResult).products;
+
+  const foundProducts = productData.filter((product) => {
+    return participantData.some((participant) => {
+      return product.title.includes(participant.purchases);
+    });
+  });
+
+  console.log(foundProducts);
 
 }).catch((err) => {
   console.log("ERROR");
