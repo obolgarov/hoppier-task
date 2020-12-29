@@ -1,3 +1,4 @@
+const { privateEncrypt } = require('crypto');
 const fs = require('fs');
 const https = require('https');
 
@@ -17,7 +18,7 @@ const https = require('https');
  * - The leftover balances would be the participants' blances minus the product they purchased
  * - Not sure if the leftover balance is the total balance of all of the participants, or
  *   the balance of each participant that made a purchase for a product found in desknibbles.
- *   Will provide both.
+ *   Will assume this means the balance of each participant, because that makes more sense to display
  * 
  * - Music listened to while writing: Ralph Vaughan Williams, Concerto Grosso: https://www.youtube.com/watch?v=AqZMd9Wv20s
  */
@@ -68,6 +69,7 @@ const getProductData = new Promise((resolve, reject) => {
     } else {
       // file exists, return that data
       console.log(`returning cached ${productFilename}`);
+      console.log();
       resolve(fileResult);
     }
   })
@@ -107,11 +109,52 @@ Promise.all([
     return uniqueProducts.some((uniqueProduct) => product.title.includes(uniqueProduct));
   });
 
+
+  // helper function for currency math:
+  const currencyToNumber = (currency) => {
+    return Number(currency.replace(/\$|\,/g, ''));
+  };
+  const numberFormatter = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+  // get total price of products
+  const totalPrice = numberFormatter.format(
+    foundParticipants.reduce((price, participant) => {
+      // return price +=;
+      const foundProduct = foundProducts.find((product) => product.title.includes(participant.purchases));
+      return price += currencyToNumber(foundProduct.variants[0].price);
+    }, 0)
+  );
+
+  // calculate remaining balances for each participant
+  const remainingBalances = foundParticipants.map((participant) => {
+    const foundProduct = foundProducts.find((product) => product.title.includes(participant.purchases));
+    const remainingBalance = numberFormatter.format(
+      currencyToNumber(participant.balance) - currencyToNumber(foundProduct.variants[0].price)
+    );
+    
+    return {
+      participant,
+      remainingBalance
+    };
+  })
+
+
   console.log('Real product participant emails:')
   console.log(foundParticipants.map((participant) => participant.email));
+  console.log();
 
   console.log('Found real products:')
   console.log(foundProducts.map((product) => product.title));
+  console.log();
+
+  console.log('Total price:');
+  console.log(totalPrice);
+  console.log();
+
+  console.log('Remaining balances:');
+  console.log(remainingBalances.map(({participant, remainingBalance}) => {
+    return `${participant.email} - ${remainingBalance}`
+  }))
 
 }).catch((err) => {
   console.log("ERROR");
