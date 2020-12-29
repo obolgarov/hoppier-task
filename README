@@ -1,1 +1,3 @@
 Built using Node.js V14.15.0, but should work with the oldest LTS release, Node.js V10.
+
+Run with "npm run start", or directly calling index.js.
