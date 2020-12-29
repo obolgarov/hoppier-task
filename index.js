@@ -1,4 +1,5 @@
 const fs = require('fs');
+const https = require('https');
 
 /**
  * Plan:
@@ -18,3 +19,32 @@ const fs = require('fs');
  *   the balance of each participant that made a purchase for a product found in desknibbles.
  *   Will provide both.
  */
+
+
+// get data from both sources (using promises so I can use Promise.all)
+const getParticipantData = new Promise((resolve, reject) => {
+  fs.readFile('MOCK_PARTICIPANT_DATA.json', (err, result) => {
+    if (err) reject(err);
+    resolve(result);
+  }); 
+});
+
+const getProductData = new Promise((resolve, reject) => {
+  https.get('https://ca.desknibbles.com/products.json?limit=250', (response) => {
+    let result = '';
+    response.on('data', (data) => {
+      result += data;
+    });
+    response.on('end', () => {
+      resolve(result);
+    })
+  }).on('error', reject);
+})
+
+Promise.all([
+  getParticipantData,
+  getProductData,
+]).then(([participantData, productData]) => {
+  console.log(participantData);
+  console.log(productData);
+})
