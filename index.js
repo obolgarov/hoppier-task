@@ -30,29 +30,58 @@ const getParticipantData = new Promise((resolve, reject) => {
 });
 
 const getProductData = new Promise((resolve, reject) => {
-  https.get({
-    hostname: 'ca.desknibbles.com',
-    path: '/products.json?limit=250',
-    headers: {
-      'user-agent': 'node-user-agent'
-    }
-  }, (response) => {
-    let result = '';
-    response.on('data', (data) => {
-      result += data;
-    });
-    response.on('end', () => {
+  // to stop calling the API all the time, cache result into a file. If the file
+  // exists, get data from file instead.
+  const productFilename = "PRODUCT_DATA.json";
+  
+  fs.readFile(productFilename, (err, result) => {
+    if (err) {
+      // assume the error is because the file doesn't exist. Load data from url.
+      
+      https.get({
+        hostname: 'ca.desknibbles.com',
+        path: '/products.json?limit=250',
+        headers: {
+          'user-agent': 'node-user-agent'
+        }
+      }, (response) => {
+        let result = '';
+        response.on('data', (data) => {
+          result += data;
+        });
+        response.on('end', () => {
+          // save data to file
+          fs.writeFile(productFilename, result, (err) => {
+            if (err) {
+              console.log(`ERROR WRITING FILE: ${productFilename}`);
+              console.log(err);
+            }
+          });
+          
+          // resolving data doesn't need to wait for file to be saved asynchronously
+          resolve(result);
+        })
+      }).on('error', reject);
+
+    } else {
+      // file exists, return that data
+      console.log('returning cached PRODUCT_DATA.json');
       resolve(result);
-    })
-  }).on('error', reject);
+    }
+  })
 })
 
 Promise.all([
   getParticipantData,
   getProductData,
-]).then(([participantData, productData]) => {
-  console.log(participantData.toString());
-  console.log(productData);
+]).then(([participantDataResult, productDataResult]) => {
+
+  // convert whatever string data to objects
+  const participantData = JSON.parse(participantDataResult);
+  const productData = JSON.parse(productDataResult);
+  
+  // console.log(productData);
+
 }).catch((err) => {
   console.log("ERROR");
   console.log(err);
