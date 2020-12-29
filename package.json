@@ -1,0 +1,11 @@
+{
+  "name": "hoppier-task",
+  "version": "1.0.0",
+  "description": "Attempt #483 of solving the task described in a Hoppier job post",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
