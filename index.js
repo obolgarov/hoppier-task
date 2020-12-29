@@ -82,13 +82,36 @@ Promise.all([
   const participantData = JSON.parse(participantDataResult);
   const productData = JSON.parse(productDataResult).products;
 
-  const foundProducts = productData.filter((product) => {
-    return participantData.some((participant) => {
+  // const foundProducts = productData.filter((product) => {
+  //   return participantData.some((participant) => {
+  //     return product.title.includes(participant.purchases);
+  //   });
+  // });
+
+  // replacing above with found participants, easier to answer questions with
+  const foundParticipants = participantData.filter((participant) => {
+    return productData.some((product) => {
       return product.title.includes(participant.purchases);
     });
   });
 
-  console.log(foundProducts);
+  // reduce participants' purchases in a list of unique purchases
+  const uniqueProducts = foundParticipants.reduce((uniquePurchases, participant) => {
+    return uniquePurchases.findIndex((product) => product === participant.purchases) !== -1
+      ? uniquePurchases
+      : [ ...uniquePurchases, participant.purchases ];
+  }, []);
+
+  // get found products using much smaller uniqueProducts list
+  const foundProducts = productData.filter((product) => {
+    return uniqueProducts.some((uniqueProduct) => product.title.includes(uniqueProduct));
+  });
+
+  console.log('Real product participant emails:')
+  console.log(foundParticipants.map((participant) => participant.email));
+
+  console.log('Found real products:')
+  console.log(foundProducts.map((product) => product.title));
 
 }).catch((err) => {
   console.log("ERROR");
