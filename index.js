@@ -1,4 +1,3 @@
-const { privateEncrypt } = require('crypto');
 const fs = require('fs');
 const https = require('https');
 
@@ -10,8 +9,7 @@ const https = require('https');
  * - To solve task "a", filter desknibbles products for those that are present in 
  *   participant data
  * 
- * - To solve task "b", the filtered products can include each participant email for
- *   whoever purchased the item.
+ * - To solve task "b", filter participants that have a product in the desknibbles data
  * 
  * - To solve task "c", the participants can be mapped to the product they purchased, then
  *   those products' prices added together.
@@ -119,7 +117,6 @@ Promise.all([
   // get total price of products
   const totalPrice = numberFormatter.format(
     foundParticipants.reduce((price, participant) => {
-      // return price +=;
       const foundProduct = foundProducts.find((product) => product.title.includes(participant.purchases));
       return price += currencyToNumber(foundProduct.variants[0].price);
     }, 0)
@@ -139,6 +136,7 @@ Promise.all([
   })
 
 
+  // outputs to copy from
   console.log('Real product participant emails:')
   console.log(foundParticipants.map((participant) => participant.email));
   console.log();
