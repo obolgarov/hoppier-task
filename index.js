@@ -30,7 +30,13 @@ const getParticipantData = new Promise((resolve, reject) => {
 });
 
 const getProductData = new Promise((resolve, reject) => {
-  https.get('https://ca.desknibbles.com/products.json?limit=250', (response) => {
+  https.get({
+    hostname: 'ca.desknibbles.com',
+    path: '/products.json?limit=250',
+    headers: {
+      'user-agent': 'node-user-agent'
+    }
+  }, (response) => {
     let result = '';
     response.on('data', (data) => {
       result += data;
@@ -45,6 +51,9 @@ Promise.all([
   getParticipantData,
   getProductData,
 ]).then(([participantData, productData]) => {
-  console.log(participantData);
+  console.log(participantData.toString());
   console.log(productData);
+}).catch((err) => {
+  console.log("ERROR");
+  console.log(err);
 })
